@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { FALLBACK_TRACKS } from "./trending-data";
+import { useEffect, useState } from "react";
+import type { TrendingTrack } from "./api/trending/route";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -12,8 +12,18 @@ export default function Home() {
   const current = new Date();
   const [year, setYear] = useState(current.getFullYear());
   const [month, setMonth] = useState(current.getMonth() + 1);
-  const tracks = FALLBACK_TRACKS;
-  const loading = false;
+  const [tracks, setTracks] = useState<TrendingTrack[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/trending?year=${year}&month=${month}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setTracks(data.tracks ?? []);
+      })
+      .finally(() => setLoading(false));
+  }, [year, month]);
 
   const years = [current.getFullYear(), current.getFullYear() - 1];
 
@@ -90,7 +100,9 @@ export default function Home() {
         </div>
 
         <p className="mt-8 text-center text-xs text-slate-500">
-          Sample chart data. Deployed as a static site on GitHub Pages.
+          Data from Last.fm chart. Add{" "}
+          <code className="rounded bg-slate-800 px-1 py-0.5">LASTFM_API_KEY</code> in Vercel for
+          live chart data.
         </p>
       </div>
     </div>
